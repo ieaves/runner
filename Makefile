@@ -19,8 +19,10 @@ docker:
 ## Cleans out merged git branches from a local and remote repository
 clean_git:
 	@git remote prune origin
-	@git branch --merged | egrep -v "(^\*|master|dev)" | xargs git branch -d
-	@git branch -r --merged | grep -v master | sed 's/origin\///' | xargs -n 1 git push --delete origin
+	@git for-each-ref --format='%(authorname)-@-&-#-%(refname:lstrip=-1)' --merged | \
+				egrep "$(git config --get user.name)" | egrep -v "(^\*|master|dev|HEAD)" | \
+				sed 's:.*-@-&-#-::' | awk '!seen[$0]++' | tee > \
+				(xargs git branch -d) > (xargs -n 1 git push --delete origin)
 	@echo "All clean, buddy"
 
 #################################################################################
